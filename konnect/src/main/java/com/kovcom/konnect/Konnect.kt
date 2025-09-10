@@ -1,4 +1,4 @@
-package com.example.myapp
+package com.kovcom.konnect
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -9,12 +9,11 @@ import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.kovcom.konnect.ping.strategy.PingStrategy
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
-import java.io.IOException
-import java.net.InetSocketAddress
-import java.net.Socket
+import java.io.Closeable
 
 /**
  * Enum representing the different states of network connectivity.
@@ -38,8 +37,13 @@ enum class NetworkState {
  * It provides a callback `onNetworkStateChanged` to listen for network status updates.
  *
  * @param context The application context to access system services.
+ * @param pingStrategy The strategy to use for pinging a host.
  */
-class Konnect(context: Context) {
+class Konnect(
+    context: Context,
+    private val pingStrategy: PingStrategy,
+    private val pingIntervalMs: Long = PING_INTERVAL_MS
+) : Closeable {
 
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -59,9 +63,6 @@ class Konnect(context: Context) {
     companion object {
         private const val TAG = "Konnect"
         private const val PING_INTERVAL_MS = 5000L
-        private const val PING_HOST = "www.google.com"
-        private const val PING_PORT = 80 // Port 80 for HTTP is generally open
-        private const val PING_TIMEOUT_MS = 2000
     }
 
     /**
@@ -142,7 +143,12 @@ class Konnect(context: Context) {
     fun stop() {
         ProcessLifecycleOwner.get().lifecycle.removeObserver(lifecycleObserver)
         coroutineScope.cancel("Konnect service is shutting down.")
+        close()
         Log.i(TAG, "Konnect service stopped.")
+    }
+
+    override fun close() {
+        (pingStrategy as? Closeable)?.close()
     }
 
     /**
@@ -171,15 +177,15 @@ class Konnect(context: Context) {
             return
         }
         pingJob = coroutineScope.launch {
-            Log.i(TAG, "Pinging started. Will ping $PING_HOST every ${PING_INTERVAL_MS}ms.")
+            Log.i(TAG, "Pinging started. Will ping every ${pingIntervalMs}ms.")
             while (isActive) {
-                val isReachable = isHostReachable()
+                val isReachable = pingStrategy.isHostReachable()
                 if (isReachable) {
                     notifyStateChange(NetworkState.REACHABLE)
                 } else {
                     notifyStateChange(NetworkState.UNAVAILABLE)
                 }
-                delay(PING_INTERVAL_MS)
+                delay(pingIntervalMs)
             }
         }
     }
@@ -193,26 +199,5 @@ class Konnect(context: Context) {
             Log.i(TAG, "Pinging stopped.")
         }
         pingJob = null
-    }
-
-    /**
-     * Performs the actual "ping" by attempting to open a socket connection.
-     * This is a more reliable method than ICMP pings on Android.
-     *
-     * @return True if the host is reachable, false otherwise.
-     */
-    private suspend fun isHostReachable(): Boolean = withContext(Dispatchers.IO) {
-        // We use a socket connection attempt as a proxy for a "ping".
-        // It checks if we can establish a TCP connection to a given host and port.
-        try {
-            Log.d(TAG, "Pinging $PING_HOST...")
-            Socket().use { socket ->
-                socket.connect(InetSocketAddress(PING_HOST, PING_PORT), PING_TIMEOUT_MS)
-                return@withContext true
-            }
-        } catch (e: IOException) {
-            // An exception means we couldn't connect, so the host is considered unreachable.
-            return@withContext false
-        }
     }
 }
