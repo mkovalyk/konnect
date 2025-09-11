@@ -22,4 +22,3 @@ dependencyResolutionManagement {
 rootProject.name = "Konnect"
 include(":app")
 include(":konnect")
-include(":konnect:core")
