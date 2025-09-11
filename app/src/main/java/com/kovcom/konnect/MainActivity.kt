@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.kovcom.konnect.logger.AndroidLogger
 import com.kovcom.konnect.ping.strategy.OkHttpPingStrategy
 import com.kovcom.konnect.ping.strategy.SocketPingStrategy
 import com.kovcom.konnect.ui.theme.KonnectTheme
@@ -51,8 +52,11 @@ fun NetworkMonitorScreen(modifier: Modifier = Modifier) {
             else -> OkHttpPingStrategy("www.google.com", 5000L) // Default
         }
 
-        // Create and start the new Konnect instance
-        val newKonnectInstance = Konnect(context, strategy).apply { start() }
+        // Create and start the new Konnect instance using the Builder
+        val newKonnectInstance = Konnect.Builder(context, strategy)
+            .setLogger(AndroidLogger()) // Set the logger using the Builder
+            .build()
+            .apply { start() }
         konnectInstance = newKonnectInstance
 
         // The onDispose block is called when the effect leaves the composition
