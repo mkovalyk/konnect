@@ -5,10 +5,11 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.kovcom.konnect.logger.AndroidLogger
+import com.kovcom.konnect.logger.Logger
 import com.kovcom.konnect.ping.strategy.PingStrategy
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
@@ -42,11 +43,14 @@ enum class NetworkState {
  *
  * @param context The application context to access system services.
  * @param pingStrategy The strategy to use for pinging a host.
+ * @param pingIntervalMs The interval in milliseconds between pings.
+ * @param logger The logger to use for logging messages.
  */
-class Konnect(
+class Konnect private constructor(
     context: Context,
     private val pingStrategy: PingStrategy,
-    private val pingIntervalMs: Long = PING_INTERVAL_MS
+    private val pingIntervalMs: Long,
+    private val logger: Logger
 ) : Closeable {
 
     private val connectivityManager =
@@ -56,18 +60,10 @@ class Konnect(
     private val _lastStateFlow = MutableStateFlow<NetworkState?>(null)
     val lastStateFlow: StateFlow<NetworkState?> = _lastStateFlow.asStateFlow()
 
-    /**
-     * A callback to listen for changes in the network state.
-     * Assign a lambda to this property to receive updates.
-     * @Deprecated("Use lastStateFlow instead to observe network state changes.")
-     */
-    var onNetworkStateChanged: ((NetworkState) -> Unit)? = null
-
     private val isAppInForegroundFlow = MutableStateFlow(false)
 
     companion object {
         private const val TAG = "Konnect"
-        private const val PING_INTERVAL_MS = 5000L
     }
 
     /**
@@ -76,13 +72,13 @@ class Konnect(
     private val lifecycleObserver = object : DefaultLifecycleObserver {
         override fun onStart(owner: LifecycleOwner) {
             super.onStart(owner)
-            Log.d(TAG, "App entered foreground.")
+            logger.d(TAG, "App entered foreground.")
             isAppInForegroundFlow.value = true
         }
 
         override fun onStop(owner: LifecycleOwner) {
             super.onStop(owner)
-            Log.d(TAG, "App entered background.")
+            logger.d(TAG, "App entered background.")
             isAppInForegroundFlow.value = false
         }
     }
@@ -140,7 +136,7 @@ class Konnect(
                 }
             }
         }
-        Log.i(TAG, "Konnect service started.")
+        logger.i(TAG, "Konnect service started.")
     }
 
     /**
@@ -150,7 +146,7 @@ class Konnect(
         ProcessLifecycleOwner.get().lifecycle.removeObserver(lifecycleObserver)
         coroutineScope.cancel("Konnect service is shutting down.")
         close()
-        Log.i(TAG, "Konnect service stopped.")
+        logger.i(TAG, "Konnect service stopped.")
     }
 
     override fun close() {
@@ -165,13 +161,8 @@ class Konnect(
     @Synchronized
     private fun notifyStateChange(newState: NetworkState) {
         if (_lastStateFlow.value != newState) {
-            Log.i(TAG, "Network state changed from ${_lastStateFlow.value} to $newState")
+            logger.i(TAG, "Network state changed from ${_lastStateFlow.value} to $newState")
             _lastStateFlow.value = newState
-            // Ensure callback is invoked on the main thread for UI safety
-            // TODO don't create scope on each call
-            MainScope().launch {
-                onNetworkStateChanged?.invoke(newState)
-            }
         }
     }
 
@@ -180,11 +171,11 @@ class Konnect(
      */
     private fun startPinging() {
         if (pingJob?.isActive == true) {
-            Log.d(TAG, "Pinging is already active.")
+            logger.d(TAG, "Pinging is already active.")
             return
         }
         pingJob = coroutineScope.launch {
-            Log.i(TAG, "Pinging started. Will ping every ${pingIntervalMs}ms.")
+            logger.i(TAG, "Pinging started. Will ping every ${pingIntervalMs}ms.")
             while (isActive) {
                 val isReachable = pingStrategy.isHostReachable()
                 if (isReachable) {
@@ -203,7 +194,7 @@ class Konnect(
     private fun stopPinging() {
         if (pingJob?.isActive == true) {
             pingJob?.cancel()
-            Log.i(TAG, "Pinging stopped.")
+            logger.i(TAG, "Pinging stopped.")
         }
         pingJob = null
     }
@@ -216,13 +207,59 @@ class Konnect(
     fun onError(cause: Throwable) {
         if (cause is SocketTimeoutException || cause is UnknownHostException) {
             stopPinging()
-            Log.e(
+            logger.e(
                 TAG,
                 "Network-related error occurred, triggering immediate ping. Cause: ${cause.message}"
             )
             startPinging()
         } else {
-            Log.e(TAG, "Non-network error occurred. Cause: ${cause.message}", cause)
+            logger.e(TAG, "Non-network error occurred. Cause: ${cause.message}", cause)
+        }
+    }
+
+    /**
+     * A builder for creating instances of [Konnect].
+     * @param context The application context.
+     * @param pingStrategy The strategy to use for pinging.
+     */
+    class Builder(
+        private val context: Context,
+        private val pingStrategy: PingStrategy
+    ) {
+        private var pingIntervalMs: Long = 5000L
+        private var logger: Logger = AndroidLogger()
+
+        /**
+         * Sets the interval in milliseconds between pings.
+         * @param interval The ping interval.
+         * @return The builder instance.
+         */
+        fun setPingInterval(interval: Long): Builder {
+            this.pingIntervalMs = interval
+            return this
+        }
+
+        /**
+         * Sets the logger to be used by Konnect.
+         * @param logger The logger instance.
+         * @return The builder instance.
+         */
+        fun setLogger(logger: Logger): Builder {
+            this.logger = logger
+            return this
+        }
+
+        /**
+         * Builds and returns a [Konnect] instance with the configured parameters.
+         * @return A new [Konnect] instance.
+         */
+        fun build(): Konnect {
+            return Konnect(
+                context = context,
+                pingStrategy = pingStrategy,
+                pingIntervalMs = pingIntervalMs,
+                logger = logger
+            )
         }
     }
 }
