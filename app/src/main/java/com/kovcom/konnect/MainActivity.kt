@@ -17,28 +17,17 @@ import androidx.compose.ui.unit.dp
 import com.kovcom.konnect.ping.strategy.OkHttpPingStrategy
 import com.kovcom.konnect.ping.strategy.SocketPingStrategy
 import com.kovcom.konnect.ui.theme.KonnectTheme
+import java.net.UnknownHostException
 
 class MainActivity : ComponentActivity() {
-
-    private var konnect: Konnect? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         setContent {
             KonnectTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NetworkMonitorScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        onStrategyChanged = { strategy ->
-                            // Stop previous Konnect instance
-                            konnect?.stop()
-
-                            // Create new Konnect instance with selected strategy
-                            konnect = Konnect(applicationContext, strategy)
-                            konnect?.start()
-                        }
+                        modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
@@ -47,33 +36,30 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun NetworkMonitorScreen(
-    modifier: Modifier = Modifier,
-    onStrategyChanged: (strategy: com.kovcom.konnect.ping.strategy.PingStrategy) -> Unit
-) {
+fun NetworkMonitorScreen(modifier: Modifier = Modifier) {
     var selectedStrategy by remember { mutableStateOf("OkHttp") }
     var konnectInstance by remember { mutableStateOf<Konnect?>(null) }
     val context = LocalContext.current
 
-    // Create initial Konnect instance
-    LaunchedEffect(Unit) {
-        val initialStrategy = OkHttpPingStrategy("www.google.com", 5000L)
-        onStrategyChanged(initialStrategy)
-        konnectInstance = Konnect(context, initialStrategy)
-    }
-
-    // Recreate Konnect when strategy changes
-    LaunchedEffect(selectedStrategy) {
-        konnectInstance?.stop()
-
+    // This effect manages the lifecycle of the Konnect instance.
+    // It runs when the composable enters the composition and whenever `selectedStrategy` changes.
+    DisposableEffect(selectedStrategy) {
+        // Create a new strategy instance based on the selection
         val strategy = when (selectedStrategy) {
             "OkHttp" -> OkHttpPingStrategy("www.google.com", 5000L)
             "Socket" -> SocketPingStrategy("www.google.com", 80, 5000)
-            else -> OkHttpPingStrategy("www.google.com", 5000L)
+            else -> OkHttpPingStrategy("www.google.com", 5000L) // Default
         }
 
-        onStrategyChanged(strategy)
-        konnectInstance = Konnect(context, strategy).apply { start() }
+        // Create and start the new Konnect instance
+        val newKonnectInstance = Konnect(context, strategy).apply { start() }
+        konnectInstance = newKonnectInstance
+
+        // The onDispose block is called when the effect leaves the composition
+        // (e.g., screen rotation, new strategy selected, or navigating away).
+        onDispose {
+            newKonnectInstance.stop()
+        }
     }
 
     val networkState by konnectInstance?.lastStateFlow?.collectAsState() ?: remember { mutableStateOf(null) }
@@ -136,7 +122,7 @@ fun NetworkMonitorScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Network state display
         Card(
@@ -145,18 +131,30 @@ fun NetworkMonitorScreen(
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
                     text = "Current Strategy: $selectedStrategy",
                     style = MaterialTheme.typography.bodyLarge
                 )
-                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Network State: ${networkState?.name ?: "Initializing..."}",
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Button to trigger onError
+        Button(
+            onClick = {
+                konnectInstance?.onError(UnknownHostException("Simulated error by button press"))
+            },
+            enabled = konnectInstance != null
+        ) {
+            Text("Simulate Network Error")
         }
     }
 }
@@ -165,6 +163,6 @@ fun NetworkMonitorScreen(
 @Composable
 fun NetworkMonitorScreenPreview() {
     KonnectTheme {
-        NetworkMonitorScreen(onStrategyChanged = {})
+        NetworkMonitorScreen()
     }
 }

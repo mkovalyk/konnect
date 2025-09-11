@@ -14,6 +14,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import java.io.Closeable
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 /**
  * Enum representing the different states of network connectivity.
@@ -21,8 +23,10 @@ import java.io.Closeable
 enum class NetworkState {
     /** The network is connected and the target host is reachable. */
     REACHABLE,
+
     /** The network is connected, but the target host is not reachable. */
     UNAVAILABLE,
+
     /** There is no active network connection. */
     UNREACHABLE
 }
@@ -45,7 +49,8 @@ class Konnect(
     private val pingIntervalMs: Long = PING_INTERVAL_MS
 ) : Closeable {
 
-    private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private val connectivityManager =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var pingJob: Job? = null
     private val _lastStateFlow = MutableStateFlow<NetworkState?>(null)
@@ -100,7 +105,8 @@ class Konnect(
         // Get the initial network state
         val initialNetwork = connectivityManager.activeNetwork
         val capabilities = connectivityManager.getNetworkCapabilities(initialNetwork)
-        val isInitiallyConnected = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+        val isInitiallyConnected =
+            capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
         trySend(isInitiallyConnected)
 
         // Register the callback
@@ -162,6 +168,7 @@ class Konnect(
             Log.i(TAG, "Network state changed from ${_lastStateFlow.value} to $newState")
             _lastStateFlow.value = newState
             // Ensure callback is invoked on the main thread for UI safety
+            // TODO don't create scope on each call
             MainScope().launch {
                 onNetworkStateChanged?.invoke(newState)
             }
@@ -199,5 +206,23 @@ class Konnect(
             Log.i(TAG, "Pinging stopped.")
         }
         pingJob = null
+    }
+
+    /**
+     * Triggers an immediate ping request. This can be used to re-evaluate network state
+     * immediately after an error or a change that might affect reachability.
+     * @param cause The throwable that caused the error, for logging purposes.
+     */
+    fun onError(cause: Throwable) {
+        if (cause is SocketTimeoutException || cause is UnknownHostException) {
+            stopPinging()
+            Log.e(
+                TAG,
+                "Network-related error occurred, triggering immediate ping. Cause: ${cause.message}"
+            )
+            startPinging()
+        } else {
+            Log.e(TAG, "Non-network error occurred. Cause: ${cause.message}", cause)
+        }
     }
 }
