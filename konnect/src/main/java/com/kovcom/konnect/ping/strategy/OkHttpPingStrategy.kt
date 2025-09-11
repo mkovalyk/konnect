@@ -9,7 +9,7 @@ import kotlinx.coroutines.withContext
 
 class OkHttpPingStrategy(
     private val host: String,
-    private val timeoutMs: Long
+    private val timeoutMs: Long,
 ) : PingStrategy {
 
     private val client = OkHttpClient.Builder()
