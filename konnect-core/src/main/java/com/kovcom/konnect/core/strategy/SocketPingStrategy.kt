@@ -1,4 +1,4 @@
-package com.kovcom.konnect.ping.strategy
+package com.kovcom.konnect.core.strategy
 
 import java.io.IOException
 import java.net.InetSocketAddress

@@ -8,9 +8,9 @@ import android.net.NetworkRequest
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.kovcom.konnect.logger.AndroidLogger
+import com.kovcom.konnect.core.logger.AndroidLogger
+import com.kovcom.konnect.core.strategy.PingStrategy
 import com.kovcom.konnect.logger.Logger
-import com.kovcom.konnect.ping.strategy.PingStrategy
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*

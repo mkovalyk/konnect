@@ -1,7 +1,6 @@
 Things todo: 
 - [x] Add different strategies for PingPong requests
-- [ ] Add an ability to set up a custom logger
-- [ ] Add an ability to set up a custom HTTP client
+- [x] Add an ability to set up a custom logger
 - [ ] Add different properties like timeout,
-- [ ] Add a method to immediately check the status of the server
-- [ ] Add different interceptor for requests
+- [x] Add a method to immediately check the status of the server
+- [x] Ad1d different interceptor for requests

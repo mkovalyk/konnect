@@ -1,9 +1,10 @@
-package com.kovcom.konnect.logger
+package com.kovcom.konnect.core.logger
 
 import android.util.Log
+import com.kovcom.konnect.logger.Logger
 
 /**
- * A default implementation of the [Logger] interface that uses the Android Log class.
+ * A default implementation of the [com.kovcom.konnect.logger.Logger] interface that uses the Android Log class.
  */
 class AndroidLogger : Logger {
     override fun d(tag: String, message: String) {

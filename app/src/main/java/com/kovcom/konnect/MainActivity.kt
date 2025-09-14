@@ -14,9 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.kovcom.konnect.logger.AndroidLogger
-import com.kovcom.konnect.ping.strategy.OkHttpPingStrategy
-import com.kovcom.konnect.ping.strategy.SocketPingStrategy
+import com.kovcom.konnect.core.logger.AndroidLogger
+import com.kovcom.konnect.core.strategy.SocketPingStrategy
+import com.kovcom.konnect.okhttp.strategy.OkHttpPingStrategy
 import com.kovcom.konnect.ui.theme.KonnectTheme
 import java.net.UnknownHostException
 

@@ -1,5 +1,6 @@
-package com.kovcom.konnect.ping.strategy
+package com.kovcom.konnect.okhttp.strategy
 
+import com.kovcom.konnect.core.strategy.PingStrategy
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
