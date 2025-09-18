@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.kovcom.konnect.core.Konnect
 import com.kovcom.konnect.core.logger.AndroidLogger
 import com.kovcom.konnect.core.strategy.SocketPingStrategy
 import com.kovcom.konnect.okhttp.strategy.OkHttpPingStrategy
