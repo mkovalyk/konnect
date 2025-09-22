@@ -1,11 +1,11 @@
 import com.vanniktech.maven.publish.AndroidMultiVariantLibrary
-import com.vanniktech.maven.publish.SonatypeHost
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     id("maven-publish")
-    id("signing") // Corrected this line
+    id("signing")
     alias(libs.plugins.vanniktech.maven.publish)
 }
 
@@ -44,22 +44,21 @@ dependencies {
 
 mavenPublishing {
 
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
-    coordinates("com.kovcom", "android", "0.1.4")
+    publishToMavenCentral()
+    coordinates("com.kovcom", "konnect", "0.1.4")
     configure(
         AndroidMultiVariantLibrary(
             sourcesJar = true,
             publishJavadocJar = false,
             includedBuildTypeValues = setOf("release"),
-            includedFlavorDimensionsAndValues = mapOf("type" to setOf("maven"))
         )
     )
 
     pom {
-        name.set("Dynodict")
-        description.set("Android specific functionality for Dynodict to manage string resources in a much more efficient way.")
-        inceptionYear.set("2024")
-        url.set("https://github.com/dynodict/dynodict-android/tree/main/dynodict-android")
+        name.set("Konnect")
+        description.set("Library to manage network connections in a much more efficient way.")
+        inceptionYear.set("2025")
+        url.set("https://github.com/mkovalyk/konnect/tree/main/")
         licenses {
             license {
                 name.set("The Apache License, Version 2.0")
@@ -77,9 +76,13 @@ mavenPublishing {
         scm {
             connection.set("scm:git:git://github.com/dynodict/dynodict-android.git")
             developerConnection.set("scm:git:ssh://github.com/dynodict/dynodict-android.git")
-            url.set("https://github.com/dynodict/dynodict-android/tree/main/dynodict-android")
+            url.set("https://github.com/mkovalyk/konnect/tree/main")
         }
     }
 
     signAllPublications()
+}
+
+signing {
+    sign(publishing.publications)
 }
