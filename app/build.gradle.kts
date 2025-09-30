@@ -8,6 +8,8 @@ android {
     namespace = "com.kovcom.konnect"
     compileSdk = 36
 
+    flavorDimensions += "version"
+
     defaultConfig {
         applicationId = "com.kovcom.konnect"
         minSdk = 24
@@ -16,6 +18,15 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    productFlavors {
+        create("project") {
+            dimension = "version"
+        }
+        create("maven") {
+            dimension = "version"
+        }
     }
 
     buildTypes {
@@ -28,11 +39,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+//        sourceCompatibility = Constants.compatibleJavaVersion
+//        targetCompatibility = Constants.compatibleJavaVersion
     }
     kotlinOptions {
-        jvmTarget = "11"
+//        jvmTarget = Constants.javaVersion
     }
     buildFeatures {
         compose = true
@@ -41,6 +52,10 @@ android {
 
 dependencies {
 
+    "projectImplementation"(project(":konnect-core"))
+    "projectImplementation"(project(":konnect-okhttp"))
+    "mavenImplementation"(libs.konnect)
+    "mavenImplementation"(libs.konnect)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

@@ -20,6 +20,7 @@ dependencyResolutionManagement {
     }
 }
 
+includeBuild("build-logic")
 rootProject.name = "Konnect"
 include(":app")
 include(":konnect-core")

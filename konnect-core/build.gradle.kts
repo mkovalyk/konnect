@@ -1,9 +1,7 @@
 import com.vanniktech.maven.publish.AndroidMultiVariantLibrary
-import java.util.Properties
 
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.konnect.plugin)
     id("maven-publish")
     id("signing")
     alias(libs.plugins.vanniktech.maven.publish)
@@ -11,31 +9,6 @@ plugins {
 
 android {
     namespace = "com.kovcom.konnect.core"
-    compileSdk = 36
-
-    defaultConfig {
-        minSdk = 24
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles("consumer-rules.pro")
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
 }
 
 dependencies {
@@ -45,7 +18,7 @@ dependencies {
 mavenPublishing {
 
     publishToMavenCentral()
-    coordinates("com.kovcom", "konnect", "0.1.4")
+    coordinates("com.kovcom", "konnect-core", "0.1.4")
     configure(
         AndroidMultiVariantLibrary(
             sourcesJar = true,

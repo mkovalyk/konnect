@@ -11,9 +11,22 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import com.kovcom.konnect.core.logger.AndroidLogger
 import com.kovcom.konnect.core.strategy.PingStrategy
 import com.kovcom.konnect.logger.Logger
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import java.io.Closeable
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -80,6 +93,12 @@ class Konnect private constructor(
             super.onStop(owner)
             logger.d(TAG, "App entered background.")
             isAppInForegroundFlow.value = false
+        }
+
+        override fun onDestroy(owner: LifecycleOwner) {
+            super.onDestroy(owner)
+            close()
+            logger.d(TAG, "App lifecycle owner destroyed.")
         }
     }
 
