@@ -1,3 +1,7 @@
+import com.kovcom.konnect.Developer
+import com.kovcom.konnect.Konnect
+import com.kovcom.konnect.License
+import com.kovcom.konnect.Scm
 import com.vanniktech.maven.publish.AndroidMultiVariantLibrary
 
 plugins {
@@ -16,40 +20,39 @@ dependencies {
 }
 
 mavenPublishing {
-
     publishToMavenCentral()
-    coordinates("com.kovcom", "konnect-core", "0.1.4")
+    coordinates(Konnect.GROUP, Konnect.ARTIFACT_ID_CORE, Konnect.VERSION)
     configure(
         AndroidMultiVariantLibrary(
             sourcesJar = true,
             publishJavadocJar = false,
-            includedBuildTypeValues = setOf("release"),
+            includedBuildTypeValues = setOf("release")
         )
     )
 
     pom {
-        name.set("Konnect")
+        name.set("Konnect-core")
         description.set("Library to manage network connections in a much more efficient way.")
         inceptionYear.set("2025")
-        url.set("https://github.com/mkovalyk/konnect/tree/main/")
+        url.set(Konnect.URL)
         licenses {
             license {
-                name.set("The Apache License, Version 2.0")
-                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                distribution.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                name.set(License.NAME)
+                url.set(License.URL)
+                distribution.set(License.DISTRIBUTION)
             }
         }
         developers {
             developer {
-                id.set("mkovalyk")
-                name.set("Mykhailo Kovalyk")
-                url.set("https://github.com/mkovalyk/")
+                id.set(Developer.ID)
+                name.set(Developer.NAME)
+                url.set(Developer.URL)
             }
         }
         scm {
-            connection.set("scm:git:git://github.com/dynodict/dynodict-android.git")
-            developerConnection.set("scm:git:ssh://github.com/dynodict/dynodict-android.git")
-            url.set("https://github.com/mkovalyk/konnect/tree/main")
+            connection.set(Scm.CONNECTION)
+            developerConnection.set(Scm.DEVELOPER_CONNECTION)
+            url.set(Scm.URL)
         }
     }
 

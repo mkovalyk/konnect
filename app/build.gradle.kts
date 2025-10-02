@@ -39,11 +39,8 @@ android {
         }
     }
     compileOptions {
-//        sourceCompatibility = Constants.compatibleJavaVersion
-//        targetCompatibility = Constants.compatibleJavaVersion
-    }
-    kotlinOptions {
-//        jvmTarget = Constants.javaVersion
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     buildFeatures {
         compose = true
@@ -51,11 +48,10 @@ android {
 }
 
 dependencies {
-
     "projectImplementation"(project(":konnect-core"))
     "projectImplementation"(project(":konnect-okhttp"))
-    "mavenImplementation"(libs.konnect)
-    "mavenImplementation"(libs.konnect)
+    "mavenImplementation"(libs.konnect.core)
+    "mavenImplementation"(libs.konnect.okhttp)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
