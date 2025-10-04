@@ -1,7 +1,7 @@
 [versions]
-agp = "8.13.0"  # Updated AGP version to stable
+agp = "8.13.0"
 konnect = "0.1.4"
-kotlin = "2.2.20" # Updated Kotlin
+kotlin = "2.2.20"
 coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -10,11 +10,9 @@ kotlinxCoroutinesCore = "1.10.2"
 lifecycleRuntimeKtx = "2.9.1"
 activityCompose = "1.10.1"
 composeBom = "2024.09.00"
-appcompat = "1.7.1"
-material = "1.12.0"
 lifecycleProcess = "2.9.3"
-okhttp = "5.1.0" # Updated OkHttp
-vanniktechMavenPublish = "0.34.0"  # Downgraded version
+okhttp = "5.1.0"
+vanniktechMavenPublish = "0.34.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
