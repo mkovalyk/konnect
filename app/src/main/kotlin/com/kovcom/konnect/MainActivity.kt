@@ -35,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kovcom.konnect.core.logger.AndroidLogger
 import com.kovcom.konnect.core.strategy.SocketPingStrategy
+import com.kovcom.konnect.network.HttpRequester
 import com.kovcom.konnect.okhttp.strategy.OkHttpPingStrategy
 import com.kovcom.konnect.ui.theme.KonnectTheme
 import java.net.UnknownHostException
@@ -60,6 +61,8 @@ fun NetworkMonitorScreen(modifier: Modifier = Modifier) {
     var selectedStrategy by remember { mutableStateOf("OkHttp") }
     var konnectInstance by remember { mutableStateOf<Konnect?>(null) }
     val context = LocalContext.current
+    var httpRequester by remember { mutableStateOf<HttpRequester?>(null) }
+
 
     // This effect manages the lifecycle of the Konnect instance.
     // It runs when the composable enters the composition and whenever `selectedStrategy` changes.
@@ -74,14 +77,15 @@ fun NetworkMonitorScreen(modifier: Modifier = Modifier) {
         // Create and start the new Konnect instance using the Builder
         val newKonnectInstance = Konnect.Builder(context, strategy)
             .setLogger(AndroidLogger()) // Set the logger using the Builder
-            .build()
-            .apply { start() }
+            .build().apply { start() }
         konnectInstance = newKonnectInstance
+        httpRequester = HttpRequester(newKonnectInstance).apply { start() }
 
         // The onDispose block is called when the effect leaves the composition
         // (e.g., screen rotation, new strategy selected, or navigating away).
         onDispose {
             newKonnectInstance.stop()
+            httpRequester?.stop()
         }
     }
 
@@ -96,32 +100,27 @@ fun NetworkMonitorScreen(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Select Ping Strategy",
-            style = MaterialTheme.typography.headlineMedium
+            text = "Select Ping Strategy", style = MaterialTheme.typography.headlineMedium
         )
 
         // Radio button group for strategy selection
         Column(
-            modifier = Modifier.selectableGroup(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .selectable(
                         selected = (selectedStrategy == "OkHttp"),
-                        onClick = { selectedStrategy = "OkHttp" }
-                    )
+                        onClick = { selectedStrategy = "OkHttp" })
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RadioButton(
                     selected = (selectedStrategy == "OkHttp"),
-                    onClick = { selectedStrategy = "OkHttp" }
-                )
+                    onClick = { selectedStrategy = "OkHttp" })
                 Text(
-                    text = "OkHttp Strategy (HTTP)",
-                    modifier = Modifier.padding(start = 8.dp)
+                    text = "OkHttp Strategy (HTTP)", modifier = Modifier.padding(start = 8.dp)
                 )
             }
 
@@ -130,18 +129,15 @@ fun NetworkMonitorScreen(modifier: Modifier = Modifier) {
                     .fillMaxWidth()
                     .selectable(
                         selected = (selectedStrategy == "Socket"),
-                        onClick = { selectedStrategy = "Socket" }
-                    )
+                        onClick = { selectedStrategy = "Socket" })
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RadioButton(
                     selected = (selectedStrategy == "Socket"),
-                    onClick = { selectedStrategy = "Socket" }
-                )
+                    onClick = { selectedStrategy = "Socket" })
                 Text(
-                    text = "Socket Strategy (TCP)",
-                    modifier = Modifier.padding(start = 8.dp)
+                    text = "Socket Strategy (TCP)", modifier = Modifier.padding(start = 8.dp)
                 )
             }
         }
@@ -175,8 +171,7 @@ fun NetworkMonitorScreen(modifier: Modifier = Modifier) {
         Button(
             onClick = {
                 konnectInstance?.onError(UnknownHostException("Simulated error by button press"))
-            },
-            enabled = konnectInstance != null
+            }, enabled = konnectInstance != null
         ) {
             Text("Simulate Network Error")
         }
