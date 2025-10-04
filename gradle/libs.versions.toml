@@ -1,5 +1,5 @@
 [versions]
-agp = "8.12.3"  # Updated AGP version to stable
+agp = "8.13.0"  # Updated AGP version to stable
 konnect = "0.1.4"
 kotlin = "2.2.20" # Updated Kotlin
 coreKtx = "1.16.0"
